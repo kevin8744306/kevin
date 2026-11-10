@@ -70,4 +70,13 @@ python skills/ziwei-doushu/scripts/ziwei.py --date 1978-11-03 --hour 3 --city �
 - `references/01-排盘规则.md`：安星法逐条、紫微起例、大限流年规则、校验案例。
 - `references/02-天纪解读框架.md`：以果决行、三方四正、武官星与桃花星的成立条件、常见格。
 - `references/03-星曜取象.md`：十四主星、六吉六煞、四化、宫位主题。
-- `references/04-校验与限制.md`：与《天纪》实盘案例的对照结果、已知偏差。
+- `references/04-校验与限制.md`：与《天纪》实盘案例的对照结果、已知偏差、应期检验协议。
+
+## 八、检验工具
+
+```bash
+python skills/ziwei-doushu/scripts/eval_timing.py        # 读 cases.json，比较小限/流年/四化四层
+```
+
+`cases.json` 记录已确认的事件（出生参数 + 事件类型 + 年份 + 精度）。分位均值只作趋势看，
+样本 <20 例不作结论。
