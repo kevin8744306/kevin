@@ -364,4 +364,12 @@ def place_spirits(chart, stars):
 
     chart["spirits"] = {"长生": CHANGSHENG, "博士": BOSHI,
                         "岁前": SUIQIAN, "将前": JIANGQIAN}
+    smap = {}
+    for gname, names, start0 in (("长生", CHANGSHENG, CHANGSHENG_START[chart["ju"]]),
+                                 ("博士", BOSHI, LU_CUN[yg]),
+                                 ("岁前", SUIQIAN, yz),
+                                 ("将前", JIANGQIAN, JIANGXING[yz])):
+        step = 1 if (gname in ("岁前", "将前") or forward) else -1
+        smap[gname] = {name: (start0 + k * step) % 12 for k, name in enumerate(names)}
+    chart["spirit_map"] = smap
     return stars

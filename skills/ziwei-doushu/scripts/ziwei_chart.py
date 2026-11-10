@@ -206,10 +206,11 @@ def render_chart(chart, birth_text=""):
         aux = [s for s in stars if s in AUX_STARS]
         hua = ["%s化%s" % (s, chart["hua_of_star"][s]) for s in stars if s in chart["hua_of_star"]]
         lim = [l for l in chart["limits"] if l["palace_index"] == i][0]
-        spirit = [s for s in stars if s in SPIRIT_NAMES]
-        def pick(names):
-            hit = [s for s in spirit if s in names]
-            return hit[0] if hit else "—"
+        def pick(group):
+            for nm, at in chart["spirit_map"][group].items():
+                if at == i:
+                    return nm
+            return "—"
         out.append("| %s%s | %s | %s | %s | %s | %d–%d | %s | %s | %s | %s |" % (
             "★" if i == chart["ming"] else "",
             name, C.ZHI[i],
@@ -217,7 +218,7 @@ def render_chart(chart, birth_text=""):
             "、".join(aux) or "—",
             "、".join(hua) or "—",
             lim["start_age"], lim["end_age"],
-            pick(C.CHANGSHENG), pick(C.BOSHI), pick(C.SUIQIAN), pick(C.JIANGQIAN)))
+            pick("长生"), pick("博士"), pick("岁前"), pick("将前")))
     out.append("")
     out.append("> 星曜亮度为通行庙旺表，各派略有出入；空宫借对宫看。")
     return "\n".join(out)
