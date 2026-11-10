@@ -1,0 +1,19 @@
+name: Agent smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  open-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open issue as github-actions[bot]
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "[smoke] 让 Super agent 改一行 README" \
+            --body '@kevin8744306 请在 README.md 末尾追加一行：> 本仓库由 Super agent 自动维护。只改这一行，改完提交到新分支并发起 PR。'
