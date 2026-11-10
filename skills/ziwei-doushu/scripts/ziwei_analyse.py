@@ -7,6 +7,7 @@
 
 import ziwei_core as C
 import ziwei_chart as Z
+import ziwei_timing as T
 
 STAR_TRAIT = {
     "紫微": ("尊贵自持、要面子、喜掌控，得势时能服众，失势时易孤高", "领导、名位、决策"),
@@ -152,8 +153,12 @@ def analyse(chart, target_year=None):
                 dx["start_age"], dx["end_age"], dx["palace"],
                 ("坐" + "、".join(dm)) if dm else "空宫", PALACE_THEME[dx["palace"]][0]))
         xx = Z.xiaoxian_index(chart, age)
-        out.append("- 小限在%s（%s宫）。" % (C.ZHI[xx], chart["palace_of"][xx]))
+        out.append("- 小限在%s（%s宫），取本宫与对宫看。" % (C.ZHI[xx], chart["palace_of"][xx]))
         out.append("")
+        out.extend(T.render_layers(chart, target_year).split("\n"))
+        out.append("")
+        out.append("> 权重：本命 1.0 ＞ 大限 0.6 ＞ 流年 0.35 ＞ 小限 0.15；"
+                   "同层内煞、忌加分，吉、禄权科减分。冲突时以大限压流年，本命压大限。")
 
     out.append("## 五、以果决行")
     out.append("")
