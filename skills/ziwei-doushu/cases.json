@@ -1,10 +1,18 @@
 [
   {
     "birth": {"date": "1975-07-14", "time": "08:00", "lon": 108.2, "lat": 34.2, "gender": "男"},
-    "note": "用户实盘；已确认事件，用于校准取法，不用于统计验证",
+    "note": "用户实盘；已确认事件（本人核对）。用于诊断与校准，不用于统计验证。",
     "events": [
+      {"year": 2005, "event": "创业", "precision": "年", "note": "与朋友合伙，地产策划代理"},
+      {"year": 2016, "event": "创业", "precision": "年", "note": "新媒体运营公司"},
+      {"year": 2020, "event": "创业", "precision": "年", "note": "新媒体运营，2021 转直播电商"},
+      {"year": 2020, "event": "离婚", "precision": "年"},
+      {"year": 2010, "event": "官非", "precision": "年", "note": "诉讼追薪资"},
+      {"year": 2022, "event": "官非", "precision": "年", "note": "与供应链公司纠纷、破财"},
+      {"year": 2023, "event": "官非", "precision": "年"},
+      {"year": 2024, "event": "官非", "precision": "年"},
       {"year": 2006, "event": "婚", "precision": "月"},
-      {"year": 2010, "event": "子"}
+      {"year": 2010, "event": "子", "precision": "年"}
     ]
   }
 ]
