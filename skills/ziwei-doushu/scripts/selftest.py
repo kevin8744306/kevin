@@ -56,7 +56,8 @@ def main():
     check("case19 身宫", C.ZHI[ch["shen"]], "寅")
     check("case19 局", ch["ju"], 4)
     check("case19 紫微", C.ZHI[ch["ziwei_index"]], "子")
-    check("case19 命宫星", ch["stars"][ch["ming"]], ["贪狼", "左辅", "天魁"])
+    check("case19 命宫星", [x for x in ch["stars"][ch["ming"]] if x in ("贪狼", "左辅", "天魁")],
+           ["贪狼", "左辅", "天魁"])
     check("case19 大限逆行", ch["limits_forward"], True)
     check("case19 首限", (ch["limits"][0]["start_age"], ch["limits"][0]["end_age"]), (4, 13))
 
@@ -65,7 +66,9 @@ def main():
     check("case22 命宫", C.ZHI[ch2["ming"]], "寅")
     check("case22 局", ch2["ju"], 4)
     check("case22 紫微", C.ZHI[ch2["ziwei_index"]], "寅")
-    check("case22 命宫星", ch2["stars"][ch2["ming"]], ["紫微", "天府", "火星", "天刑", "孤辰"])
+    check("case22 命宫星", [x for x in ch2["stars"][ch2["ming"]]
+                            if x in ("紫微", "天府", "火星", "天刑", "孤辰")],
+           ["紫微", "天府", "火星", "天刑", "孤辰"])
     check("case22 大限逆行", ch2["limits_forward"], False)
 
     # 真太阳时：成都应比标准时早约 64 分钟
@@ -73,6 +76,18 @@ def main():
     tst, corr = Z.true_solar(datetime(1990, 5, 17, 12, 0), 104.1)
     check("成都经度校正范围", -70 < corr < -55, True)
     check("成都真太阳时小时", tst.hour, 11)
+
+    SP = set(C.SUIQIAN) | set(C.JIANGQIAN) | set(C.BOSHI) | set(C.CHANGSHENG)
+    c61 = Z.build(lunar_known=True, year=1961, month=3, day=5, hour=20, gender="女")
+    for zhi, want in {"午": "沐浴", "未": "冠带", "申": "临官", "酉": "帝旺"}.items():
+        check("长生1961 %s" % zhi, want in [x for x in c61["stars"][C.ZHI.index(zhi)] if x in SP], True)
+    for zhi, want in {"午": "大耗", "未": "伏兵", "申": "官府", "酉": "博士"}.items():
+        check("博士1961 %s" % zhi, want in [x for x in c61["stars"][C.ZHI.index(zhi)] if x in SP], True)
+    for zhi, want in {"午": "咸池", "丑": "华盖"}.items():
+        check("将前1961 %s" % zhi, want in [x for x in c61["stars"][C.ZHI.index(zhi)] if x in SP], True)
+    c47 = Z.build(lunar_known=True, year=1947, month=6, day=4, hour=10, gender="男")
+    for zhi, want in {"寅": "临官", "丑": "帝旺", "子": "衰"}.items():
+        check("长生1947 %s" % zhi, want in [x for x in c47["stars"][C.ZHI.index(zhi)] if x in SP], True)
 
     if FAIL:
         print("FAILED %d" % len(FAIL))

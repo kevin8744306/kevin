@@ -142,6 +142,8 @@ def wuxing_ju(gan, zhi):
 TIAN_KUI = {0: 1, 1: 0, 2: 11, 3: 11, 4: 1, 5: 0, 6: 1, 7: 6, 8: 3, 9: 3}
 TIAN_YUE = {0: 7, 1: 8, 2: 9, 3: 9, 4: 7, 5: 8, 6: 7, 7: 2, 8: 5, 9: 5}
 LU_CUN = {0: 2, 1: 3, 2: 5, 3: 6, 4: 5, 5: 6, 6: 8, 7: 9, 8: 11, 9: 0}
+TIAN_GUAN = [7, 4, 5, 2, 3, 9, 11, 9, 10, 6]
+TIAN_FU = [9, 8, 0, 11, 3, 2, 6, 5, 6, 5]
 SIHUA = {
     0: {"禄": "廉贞", "权": "破军", "科": "武曲", "忌": "太阳"},
     1: {"禄": "天机", "权": "天梁", "科": "紫微", "忌": "太阴"},
@@ -274,6 +276,15 @@ def place_stars(chart):
     put("孤辰", gu)
     put("寡宿", gua)
 
+    # 天官、天福（依年干）
+    put("天官", TIAN_GUAN[ygan])
+    put("天福", TIAN_FU[ygan])
+    # 天才、天寿（命宫／身宫起子顺数至年支）
+    put("天才", (chart["ming"] + chart["year_zhi"]) % 12)
+    put("天寿", (chart["shen"] + chart["year_zhi"]) % 12)
+    # 台辅、封诰（午／寅起子时顺行）
+    put("台辅", (6 + hour) % 12)
+    put("封诰", (2 + hour) % 12)
     # 三台八座、恩光天贵
     zuofu = (4 + month - 1) % 12
     youbi = (10 - (month - 1)) % 12
@@ -283,6 +294,8 @@ def place_stars(chart):
     put("八座", (youbi - (day - 2)) % 12)
     put("恩光", (wenchang + day - 2) % 12)
     put("天贵", (wenqu + day - 2) % 12)
+
+    place_spirits(chart, stars)
 
     chart["stars_by_palace"] = stars
     return stars
@@ -309,3 +322,46 @@ BRIGHTNESS = {
 
 def brightness(star, branch):
     return BRIGHTNESS.get(star, ["平"] * 12)[branch % 12]
+
+
+# ---- 十二神：长生 / 博士 / 岁前 / 将前 ----
+SUIQIAN = ["岁建", "晦气", "丧门", "贯索", "官符", "小耗",
+           "大耗", "龙德", "白虎", "天德", "吊客", "病符"]
+JIANGQIAN = ["将星", "攀鞍", "岁驿", "息神", "华盖", "劫煞",
+             "灾煞", "天煞", "指背", "咸池", "月煞", "亡神"]
+BOSHI = ["博士", "力士", "青龙", "小耗", "将军", "奏书",
+         "飞廉", "喜神", "病符", "大耗", "伏兵", "官府"]
+CHANGSHENG = ["长生", "沐浴", "冠带", "临官", "帝旺", "衰",
+              "病", "死", "墓", "绝", "胎", "养"]
+JIANGXING = {2: 6, 6: 6, 10: 6, 8: 0, 0: 0, 4: 0, 5: 9, 9: 9, 1: 9, 11: 3, 3: 3, 7: 3}
+CHANGSHENG_START = {2: 8, 3: 11, 4: 5, 5: 8, 6: 2}
+
+
+def place_spirits(chart, stars):
+    """安四组十二神；流年定位与应期用（见 references/01 第 6.5 节）。"""
+    yg = chart["year_gan"]
+    yz = chart["year_zhi"]
+    male = chart["gender"] == "男"
+    yang = (yg % 2 == 0)
+    forward = (yang and male) or ((not yang) and (not male))
+
+    start = CHANGSHENG_START[chart["ju"]]
+    for k, name in enumerate(CHANGSHENG):
+        idx = (start + k) % 12 if forward else (start - k) % 12
+        stars.setdefault(idx, []).append(name)
+
+    lc = LU_CUN[yg]
+    for k, name in enumerate(BOSHI):
+        idx = (lc + k) % 12 if forward else (lc - k) % 12
+        stars.setdefault(idx, []).append(name)
+
+    for k, name in enumerate(SUIQIAN):
+        stars.setdefault((yz + k) % 12, []).append(name)
+
+    jx = JIANGXING[yz]
+    for k, name in enumerate(JIANGQIAN):
+        stars.setdefault((jx + k) % 12, []).append(name)
+
+    chart["spirits"] = {"长生": CHANGSHENG, "博士": BOSHI,
+                        "岁前": SUIQIAN, "将前": JIANGQIAN}
+    return stars

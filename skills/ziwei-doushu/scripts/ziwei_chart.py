@@ -14,7 +14,15 @@ LUMA_STARS = set(["紫微", "天机", "太阳", "武曲", "天同", "廉贞",
 AUX_STARS = ["左辅", "右弼", "文昌", "文曲", "天魁", "天钺",
              "禄存", "天马", "擎羊", "陀罗", "火星", "铃星", "地空", "地劫",
              "红鸾", "天喜", "天刑", "天姚", "天哭", "天虚", "龙池", "凤阁",
-             "孤辰", "寡宿", "三台", "八座", "恩光", "天贵"]
+             "孤辰", "寡宿", "三台", "八座", "恩光", "天贵",
+             "天官", "天福", "天才", "天寿", "台辅", "封诰"]
+SPIRIT_NAMES = set(["岁建", "晦气", "丧门", "贯索", "官符", "小耗", "大耗",
+                    "龙德", "白虎", "天德", "吊客", "病符", "将星", "攀鞍",
+                    "岁驿", "息神", "华盖", "劫煞", "灾煞", "天煞", "指背",
+                    "咸池", "月煞", "亡神", "博士", "力士", "青龙", "将军",
+                    "奏书", "飞廉", "喜神", "伏兵", "官府", "长生", "沐浴",
+                    "冠带", "临官", "帝旺", "衰", "病", "死", "墓", "绝",
+                    "胎", "养"])
 
 
 def equation_of_time(d):
@@ -189,22 +197,27 @@ def render_chart(chart, birth_text=""):
         "阳" if chart["year_gan"] % 2 == 0 else "阴", chart["gender"],
         "顺" if chart["limits_forward"] else "逆"))
     out.append("")
-    out.append("| 宫位 | 地支 | 主星（庙旺） | 吉煞星 | 生年四化 | 大限 |")
-    out.append("| --- | --- | --- | --- | --- | --- |")
+    out.append("| 宫位 | 地支 | 主星（庙旺） | 吉煞辅星 | 四化 | 大限 | 长生 | 博士 | 岁前 | 将前 |")
+    out.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for i in range(12):
         name = chart["palace_of"][i]
         stars = chart["stars"].get(i, [])
         main = [s for s in stars if s in LUMA_STARS]
-        aux = [s for s in stars if s not in LUMA_STARS]
+        aux = [s for s in stars if s in AUX_STARS]
         hua = ["%s化%s" % (s, chart["hua_of_star"][s]) for s in stars if s in chart["hua_of_star"]]
         lim = [l for l in chart["limits"] if l["palace_index"] == i][0]
-        out.append("| %s%s | %s | %s | %s | %s | %d–%d |" % (
+        spirit = [s for s in stars if s in SPIRIT_NAMES]
+        def pick(names):
+            hit = [s for s in spirit if s in names]
+            return hit[0] if hit else "—"
+        out.append("| %s%s | %s | %s | %s | %s | %d–%d | %s | %s | %s | %s |" % (
             "★" if i == chart["ming"] else "",
             name, C.ZHI[i],
             "、".join("%s(%s)" % (s, C.brightness(s, i)) for s in main) or "（空宫）",
             "、".join(aux) or "—",
             "、".join(hua) or "—",
-            lim["start_age"], lim["end_age"]))
+            lim["start_age"], lim["end_age"],
+            pick(C.CHANGSHENG), pick(C.BOSHI), pick(C.SUIQIAN), pick(C.JIANGQIAN)))
     out.append("")
     out.append("> 星曜亮度为通行庙旺表，各派略有出入；空宫借对宫看。")
     return "\n".join(out)
