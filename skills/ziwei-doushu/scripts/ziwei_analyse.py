@@ -8,6 +8,7 @@
 import ziwei_core as C
 import ziwei_chart as Z
 import ziwei_timing as T
+import ziwei_star_palace as SP
 
 STAR_TRAIT = {
     "紫微": ("尊贵自持、要面子、喜掌控，得势时能服众，失势时易孤高", "领导、名位、决策"),
@@ -131,7 +132,17 @@ def analyse(chart, target_year=None):
             parts.append("见" + "、".join(sha))
         note = ""
         if m:
-            note = "；".join(STAR_TRAIT[s][0].split("、")[0] for s in m)
+            hint = SP.reading(m[0], name)
+            note = ("《全书》本宫条：%s" % hint[0].rstrip("。")) if hint else "；".join(
+                STAR_TRAIT[s][0].split("、")[0] for s in m)
+            cond = None
+            for star in m:
+                r = SP.reading(star, name)
+                if r and r[1]:
+                    cond = r[1].rstrip("。")
+                    break
+            if cond:
+                note += "；改判：" + cond
         elif sha:
             note = SHA_MEANING[sha[0]].split("、")[0]
         out.append("- **%s（%s）**：%s。此宫主%s%s" % (

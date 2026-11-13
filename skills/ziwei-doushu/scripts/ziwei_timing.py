@@ -46,7 +46,7 @@ def layer_strength(facts):
     for s, b in facts["bright"].items():
         if b in ("庙", "旺"):
             score -= 0.3
-        elif b == "陷":
+        elif b in ("陷", "不得地"):
             score += 0.3
     return score
 
