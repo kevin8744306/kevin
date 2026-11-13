@@ -18,6 +18,26 @@ SHA = ("擎羊", "陀罗", "火星", "铃星", "地空", "地劫")
 JI = ("左辅", "右弼", "文昌", "文曲", "天魁", "天钺", "禄存", "天马")
 
 
+
+CHANGSHENG_MEANING = {
+    "长生": "萌发、起步", "沐浴": "不稳、易动", "冠带": "成形、有模样",
+    "临官": "任事、可担", "帝旺": "极盛、到顶", "衰": "由盛转减",
+    "病": "力弱、需养", "死": "止住、不动", "墓": "收藏、入库",
+    "绝": "断、空", "胎": "酝酿、未显", "养": "蓄积、待发",
+}
+BOSHI_MEANING = {
+    "博士": "智与专业", "力士": "力与执行", "青龙": "喜与得助", "小耗": "小损与零耗",
+    "将军": "势与主事", "奏书": "文书与公文", "飞廉": "口舌与被议", "喜神": "喜庆",
+    "病符": "病与就医", "大耗": "大损与破财", "伏兵": "暗与隐忧", "官府": "官与规制",
+}
+CHANGSHENG_SCORE = {"长生": -0.3, "沐浴": 0.1, "冠带": -0.2, "临官": -0.4, "帝旺": -0.4,
+                    "衰": 0.2, "病": 0.3, "死": 0.3, "墓": 0.2, "绝": 0.4,
+                    "胎": -0.1, "养": -0.1}
+BOSHI_SCORE = {"博士": -0.2, "力士": -0.1, "青龙": -0.3, "小耗": 0.1, "将军": -0.1,
+               "奏书": -0.2, "飞廉": 0.2, "喜神": -0.3, "病符": 0.3, "大耗": 0.4,
+               "伏兵": 0.2, "官府": 0.2}
+
+
 def sanfang(idx):
     """三方四正：本宫、两个三合宫、对宫。"""
     return [idx, (idx + 4) % 12, (idx + 8) % 12, (idx + 6) % 12]
@@ -51,6 +71,24 @@ def layer_strength(facts):
     return score
 
 
+def spirit_state(chart, idx):
+    """取该宫的长生与博士状态。"""
+    cs = None
+    bs = None
+    for name, at in chart["spirit_map"]["长生"].items():
+        if at == idx:
+            cs = name
+    for name, at in chart["spirit_map"]["博士"].items():
+        if at == idx:
+            bs = name
+    return cs, bs
+
+
+def state_score(chart, idx):
+    cs, bs = spirit_state(chart, idx)
+    return CHANGSHENG_SCORE.get(cs, 0.0) + BOSHI_SCORE.get(bs, 0.0)
+
+
 def snapshot(chart, year):
     """某一年的四层快照，含各自三方四正（小限取本宫与对宫）。"""
     ln = Z.liunian_index(year)
@@ -70,7 +108,7 @@ def snapshot(chart, year):
     out = []
     for layer in layers:
         facts = [palace_facts(chart, i) for i in layer["scope"]]
-        strength = layer_strength(facts[0])
+        strength = layer_strength(facts[0]) + state_score(chart, layer["scope"][0])
         out.append({"layer": layer["layer"], "range": layer.get("range", ""),
                     "ganzhi": layer.get("ganzhi", ""),
                     "base": facts[0], "scope": facts,

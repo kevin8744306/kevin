@@ -9,6 +9,7 @@ import ziwei_core as C
 import ziwei_chart as Z
 import ziwei_timing as T
 import ziwei_star_palace as SP
+import ziwei_patterns as PAT
 
 STAR_TRAIT = {
     "紫微": ("尊贵自持、要面子、喜掌控，得势时能服众，失势时易孤高", "领导、名位、决策"),
@@ -97,6 +98,8 @@ def analyse(chart, target_year=None):
     out.append("- 三方四正会%s；%s。" % (
         "、".join(san_main) or "无主星",
         "吉星成局，外援足" if san_ji else ("煞星入三方，须自持" if san_sha else "平顺无奇")))
+    for name, why in PAT.detect(chart):
+        out.append("- 格局：%s——%s。" % (name, why))
     out.append("- 五行局：%s（%d 局），%d 岁起大限，%s行。" % (
         chart["ju_wuxing"] + str(chart["ju"]), chart["ju"], chart["ju"],
         "顺" if chart["limits_forward"] else "逆"))
@@ -145,9 +148,15 @@ def analyse(chart, target_year=None):
                 note += "；改判：" + cond
         elif sha:
             note = SHA_MEANING[sha[0]].split("、")[0]
-        out.append("- **%s（%s）**：%s。此宫主%s%s" % (
+        cs, bs = T.spirit_state(chart, i)
+        state = ""
+        if cs:
+            state += "长生%s（%s）" % (cs, T.CHANGSHENG_MEANING.get(cs, ""))
+        if bs:
+            state += ("；" if state else "") + "博士%s（%s）" % (bs, T.BOSHI_MEANING.get(bs, ""))
+        out.append("- **%s（%s）**：%s。此宫主%s%s。%s" % (
             name, C.ZHI[i], "，".join(parts), theme[0],
-            ("，" + note) if note else ""))
+            ("，" + note) if note else "", state))
     out.append("")
 
     if target_year:
