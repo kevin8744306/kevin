@@ -141,3 +141,44 @@ def render_layers(chart, year):
             l["layer"], ("（%s）" % tag) if tag else "",
             desc, "，".join(extra) or "无煞忌", scope))
     return "\n".join(out)
+
+def doujun(chart, year):
+    """斗君：流年正月宫。以流年太岁宫起正月逆数至生月，再自该宫起子时顺数至生时。"""
+    tai = Z.liunian_index(year)
+    month = chart["lunar_month_eff"]
+    base = (tai - (month - 1)) % 12
+    return (base + chart["hour_zhi"]) % 12
+
+
+def month_palace(chart, year, lunar_month):
+    """流月宫：斗君起正月，顺行。lunar_month 取 1–12（闰月按本月算）。"""
+    return (doujun(chart, year) + (lunar_month - 1)) % 12
+
+
+def month_snapshot(chart, year, lunar_month):
+    idx = month_palace(chart, year, lunar_month)
+    facts = palace_facts(chart, idx)
+    cs, bs = spirit_state(chart, idx)
+    return {
+        "palace": facts,
+        "index": idx,
+        "opposite": palace_facts(chart, (idx + 6) % 12),
+        "chang_sheng": cs, "bo_shi": bs,
+        "strength": round(LAYER_WEIGHT["流年"] * (1 + layer_strength(facts) + state_score(chart, idx)), 2),
+    }
+
+
+def gong_gan(chart, idx):
+    """宫干：由年干五虎遁推某地支宫的天干。"""
+    return C.palace_gan(chart["year_gan"], idx)
+
+
+def xiaoxian_hua(chart, age):
+    """小限四化：以小限宫宫干起四化。"""
+    xx = Z.xiaoxian_index(chart, age)
+    return C.SIHUA[gong_gan(chart, xx)], xx
+
+
+def liunian_hua(year):
+    """流年四化：以流年干起四化（本 skill 默认不用于断，只作对照）。"""
+    return C.SIHUA[C.year_gan_by_lunar_year(year)]

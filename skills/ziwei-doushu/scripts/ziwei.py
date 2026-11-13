@@ -31,6 +31,7 @@ def main(argv=None):
     p.add_argument("--gender", default="男", choices=["男", "女"])
     p.add_argument("--year", type=int, help="要看流年的年份")
     p.add_argument("--late-zi", action="store_true", help="23 点后算次日")
+    p.add_argument("--month", type=int, help="农历月 1-12，配合 --year 输出流月宫")
     p.add_argument("--json", action="store_true", help="输出 JSON")
     args = p.parse_args(argv)
 
@@ -87,6 +88,24 @@ def main(argv=None):
     lines.append(Z.render_chart(chart, birth))
     lines.append("")
     lines.append(A.analyse(chart, args.year))
+    if args.year and args.month:
+        import ziwei_timing as T
+        idx = T.month_palace(chart, args.year, args.month)
+        snap = T.month_snapshot(chart, args.year, args.month)
+        facts = snap["palace"]
+        lines.append("")
+        lines.append("## 流月（%d 年第 %d 月，斗君在%s）" % (
+            args.year, args.month, C.ZHI[T.doujun(chart, args.year)]))
+        lines.append("")
+        lines.append("- 流月命宫：%s（%s）%s" % (
+            C.ZHI[idx], facts["palace"],
+            ("，坐" + "、".join(facts["main"])) if facts["main"] else "，空宫"))
+        if facts["sha"]:
+            lines.append("- 煞：%s" % "、".join(facts["sha"]))
+        if facts["hua"]:
+            lines.append("- 化：%s" % "、".join(k + v for k, v in facts["hua"].items()))
+        lines.append("- 长生%s、博士%s" % (snap["chang_sheng"], snap["bo_shi"]))
+        lines.append("- 对宫：%s（%s）" % (snap["opposite"]["zhi"], snap["opposite"]["palace"]))
     print("\n".join(lines))
     return 0
 
