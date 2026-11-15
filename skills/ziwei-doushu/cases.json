@@ -88,6 +88,17 @@
     "precision": "月",
     "month": 3,
     "note": "领证"
+   },
+   {
+    "year": 2020,
+    "event": "创业",
+    "precision": "年",
+    "note": "注册公司自营；此前任上市装饰公司事业部总经理"
+   },
+   {
+    "year": 2020,
+    "event": "离婚",
+    "precision": "年"
    }
   ]
  }
