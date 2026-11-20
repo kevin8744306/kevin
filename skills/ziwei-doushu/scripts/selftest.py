@@ -115,6 +115,13 @@ def main():
                   longitude=108.2)
     check("2010 生子分位", E.rank(his, 2010, "子", "流年") >= 0.9, True)
 
+    # r10 三条：创业本命视角、官非地劫、合婚离婚项
+    check("2005 创业分位", E.rank(his, 2005, "创业", "流年") >= 0.7, True)
+    check("2023 官非分位", E.rank(his, 2023, "官非", "流年") >= 0.5, True)
+    her2 = Z.build(lunar_known=False, year=1978, month=7, day=23, hour=8, gender="女",
+                   longitude=120)
+    check("她 2020 离婚（合婚）", E.rank(her2, 2020, "离婚", "流年", partner=his) >= 0.8, True)
+
     if FAIL:
         print("FAILED %d" % len(FAIL))
         for f in FAIL:

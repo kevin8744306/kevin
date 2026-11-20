@@ -40,11 +40,16 @@ def build(b):
 
 def main(path):
     cases = json.load(open(path, encoding="utf-8"))
+    charts = [build(c["birth"]) for c in cases]
     rows = []
-    for case in cases:
-        ch = build(case["birth"])
+    for idx, case in enumerate(cases):
+        ch = charts[idx]
+        partner = None
+        pidx = case.get("partner_index")
+        if pidx is not None and pidx < len(charts):
+            partner = charts[pidx]
         for ev in case["events"]:
-            r = E.compare(ch, ev["year"], ev["event"])
+            r = E.compare(ch, ev["year"], ev["event"], partner=partner)
             rows.append((ev["year"], ev["event"], r))
     if not rows:
         print("no events")

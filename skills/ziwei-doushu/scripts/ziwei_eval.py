@@ -31,7 +31,7 @@ MARK = {
     "婚": ("红鸾", "天喜", "文昌", "文曲"),
     "子": ("红鸾", "天喜", "天魁", "天贵"),
     "病": ("擎羊", "陀罗", "天刑"),
-    "官非": ("擎羊", "陀罗", "铃星", "天刑"),
+    "官非": ("擎羊", "陀罗", "铃星", "天刑"),  # 地劫另按 0.5 计，见下
     "破财": ("地劫", "地空", "大耗"),
     "创业": ("天府", "左辅", "巨门", "天魁", "天钺"),
     "离婚": ("火星", "擎羊", "寡宿"),
@@ -57,9 +57,42 @@ def base_of(chart, year, layer, lunar_month=None):
     raise ValueError(layer)
 
 
-def score(chart, year, event, layer, lunar_month=None, hua=None):
+def natal_view(chart, year, event):
+    """本命视角：流年命宫落在本命哪一宫，决定该年最容易起什么事。
+
+    例：2005 流年命宫落本命迁移（天府、左辅同宫）——合伙创业之年。
+    """
+    if event != "创业":
+        return 0.0
+    base = Z.liunian_index(year)
+    name = chart["palace_of"][base]
+    stars = chart["stars"].get(base, [])
+    if name not in ("迁移", "交友", "子女", "官禄"):
+        return 0.0
+    pts = 1.0
+    for m in ("天府", "左辅", "巨门", "天魁", "天钺", "禄存"):
+        if m in stars:
+            pts += 1.0
+    return pts
+
+
+def ji_branch(chart):
+    """生年忌星所在宫位。"""
+    for i, stars in chart["stars"].items():
+        for star, kind in chart["hua_of_star"].items():
+            if kind == "忌" and star in stars:
+                return i
+    return None
+
+
+def score(chart, year, event, layer, lunar_month=None, hua=None, partner=None):
     base = base_of(chart, year, layer, lunar_month)
-    total = 0.0
+    total = natal_view(chart, year, event)
+    # 合婚项：离婚看「对方的生年忌落在自己当年的夫妻宫」，单盘无解
+    if partner is not None and event == "离婚" and layer in ("流年", "流月"):
+        jb = ji_branch(partner)
+        if jb is not None and jb == (base - 2) % 12:
+            total += 1.5
     # 生育的十年条件：大限命宫落本命子女宫（该十年为生育期），年条件再看喜星与禄
     if event == "子" and layer in ("流年", "小限"):
         age = year - chart["lunar_year"] + 1
@@ -76,6 +109,8 @@ def score(chart, year, event, layer, lunar_month=None, hua=None):
         maps = dict(chart["spirit_map"])
         if layer in ("流年", "流月"):
             maps.update(T.year_spirit_map(chart, year))
+        if event == "官非" and "地劫" in stars:
+            total += 0.5
         for sh in SHEN[event]:
             for grp in ("岁前", "将前", "博士"):
                 if maps.get(grp, {}).get(sh) == idx:
@@ -91,27 +126,27 @@ def score(chart, year, event, layer, lunar_month=None, hua=None):
     return total
 
 
-def rank(chart, year, event, layer, lunar_month=None, window=5, hua=None):
+def rank(chart, year, event, layer, lunar_month=None, window=5, hua=None, partner=None):
     """事件年（月）在同层相邻窗口内的分位，1 = 该层把它排最高。"""
     if layer == "流月":
         months = [m for m in range(max(1, lunar_month - window), min(12, lunar_month + window) + 1)]
-        scores = [score(chart, year, event, layer, m, hua) for m in months]
-        target = score(chart, year, event, layer, lunar_month, hua)
+        scores = [score(chart, year, event, layer, m, hua, partner) for m in months]
+        target = score(chart, year, event, layer, lunar_month, hua, partner)
     else:
         years = [year + k for k in range(-window, window + 1)]
-        scores = [score(chart, y, event, layer, None, hua) for y in years]
-        target = score(chart, year, event, layer, None, hua)
+        scores = [score(chart, y, event, layer, None, hua, partner) for y in years]
+        target = score(chart, year, event, layer, None, hua, partner)
     lower = sum(1 for s in scores if s < target)
     equal = sum(1 for s in scores if s == target) - 1
     return round((lower + 0.5 * max(equal, 0)) / max(len(scores) - 1, 1), 2)
 
 
-def compare(chart, year, event):
+def compare(chart, year, event, partner=None):
     """四层对比（年层）：流年 / 小限 / 流年四化 / 小限四化。"""
     xh, _ = T.xiaoxian_hua(chart, year - chart["lunar_year"] + 1)
     return {
-        "流年": rank(chart, year, event, "流年"),
-        "小限": rank(chart, year, event, "小限"),
-        "流年化": rank(chart, year, event, "流年", hua=T.liunian_hua(year)),
-        "小限化": rank(chart, year, event, "小限", hua=xh),
+        "流年": rank(chart, year, event, "流年", partner=partner),
+        "小限": rank(chart, year, event, "小限", partner=partner),
+        "流年化": rank(chart, year, event, "流年", hua=T.liunian_hua(year), partner=partner),
+        "小限化": rank(chart, year, event, "小限", hua=xh, partner=partner),
     }

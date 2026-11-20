@@ -65,7 +65,9 @@
     "event": "子",
     "precision": "年"
    }
-  ]
+  ],
+  "name": "男·1975-07-14",
+  "partner_index": 1
  },
  {
   "birth": {
@@ -100,6 +102,8 @@
     "event": "离婚",
     "precision": "年"
    }
-  ]
+  ],
+  "name": "女·1978-07-23",
+  "partner_index": 0
  }
 ]

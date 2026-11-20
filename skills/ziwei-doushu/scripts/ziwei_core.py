@@ -10,7 +10,7 @@
 
 from datetime import date, datetime, timedelta
 
-MODEL_VERSION = "2026.11.21-r9"
+MODEL_VERSION = "2026.11.21-r10"
 
 GAN = "甲乙丙丁戊己庚辛壬癸"
 ZHI = "子丑寅卯辰巳午未申酉戌亥"
