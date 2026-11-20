@@ -109,6 +109,12 @@ def main():
     check("2027 岁建", sm["岁前"]["岁建"], 7)
     check("2027 官符", sm["岁前"]["官符"], 11)
 
+    # 生育判据（r9）：大限落本命子女宫 + 流年夫妻宫踏喜星；男方 2010 应排在高分位
+    import ziwei_eval as E
+    his = Z.build(lunar_known=False, year=1975, month=7, day=14, hour=8, gender="男",
+                  longitude=108.2)
+    check("2010 生子分位", E.rank(his, 2010, "子", "流年") >= 0.9, True)
+
     if FAIL:
         print("FAILED %d" % len(FAIL))
         for f in FAIL:

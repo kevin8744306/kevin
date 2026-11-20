@@ -19,7 +19,7 @@ ROLE_OFFSET = {"命宫": 0, "夫妻": -2, "子女": -3, "财帛": -4, "疾厄": 
 
 ROLES = {
     "婚": ("夫妻", "子女"),
-    "子": ("子女",),
+    "子": ("子女", "夫妻"),
     "病": ("疾厄",),
     "官非": ("官禄", "命宫"),
     "破财": ("财帛", "田宅"),
@@ -60,6 +60,12 @@ def base_of(chart, year, layer, lunar_month=None):
 def score(chart, year, event, layer, lunar_month=None, hua=None):
     base = base_of(chart, year, layer, lunar_month)
     total = 0.0
+    # 生育的十年条件：大限命宫落本命子女宫（该十年为生育期），年条件再看喜星与禄
+    if event == "子" and layer in ("流年", "小限"):
+        age = year - chart["lunar_year"] + 1
+        dx = Z.daxian_for_age(chart, age)
+        if dx and dx["palace_index"] == (chart["ming"] - 3) % 12:
+            total += 1.5
     for role in ROLES[event]:
         idx = (base + ROLE_OFFSET[role]) % 12
         stars = chart["stars"].get(idx, [])
