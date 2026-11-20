@@ -219,3 +219,13 @@ def render_hua_reference(chart, year):
     lines.append("> 参照层：只作「往哪个方向动」的旁证，不进强度评分；"
                  "同一颗星被两层同向化到＝加强，被反向化到＝拉扯。")
     return "\n".join(lines)
+
+
+def year_spirit_map(chart, year):
+    """流年层的十二神：岁前、将前按流年支重起（本命层按生年支）。"""
+    yz = Z.liunian_index(year)
+    sui = {name: (yz + k) % 12 for k, name in enumerate(C.SUIQIAN)}
+    jx = C.JIANGXING[yz]
+    jiang = {name: (jx + k) % 12 for k, name in enumerate(C.JIANGQIAN)}
+    return {"岁前": sui, "将前": jiang}
+

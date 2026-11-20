@@ -9,6 +9,7 @@ from datetime import date
 
 import ziwei_core as C
 import ziwei_chart as Z
+import ziwei_timing as T
 
 FAIL = []
 
@@ -88,6 +89,25 @@ def main():
     c47 = Z.build(lunar_known=True, year=1947, month=6, day=4, hour=10, gender="男")
     for zhi, want in {"寅": "临官", "丑": "帝旺", "子": "衰"}.items():
         check("长生1947 %s" % zhi, want in [x for x in c47["stars"][C.ZHI.index(zhi)] if x in SP], True)
+
+    # 夏令时：1988-06-15 07:30 北京，夏令时先减 1 小时，真太阳时约 06:15 -> 卯时
+    ch_dst = Z.build(lunar_known=False, year=1988, month=6, day=15, hour=7, minute=30,
+                     gender="男", longitude=116.4)
+    check("DST 生效", ch_dst["dst_applied"], True)
+    check("DST 后时支", ch_dst["hour_zhi"], 3)
+
+    # 立春分界：1990-02-03 12:00 仍在己巳年（立春 02-04 10:12）
+    c_lunar = Z.build(lunar_known=False, year=1990, month=2, day=3, hour=12, gender="男",
+                      longitude=120, solar_correction=False)
+    c_lichun = Z.build(lunar_known=False, year=1990, month=2, day=3, hour=12, gender="男",
+                       longitude=120, solar_correction=False, year_boundary="lichun")
+    check("农历年分界", C.ZHI[c_lunar["year_zhi"]], "午")
+    check("立春分界", C.ZHI[c_lichun["year_zhi"]], "巳")
+
+    # 流年十二神按流年支重起：2027 丁未，岁建在未、官符在亥
+    sm = T.year_spirit_map(c_lunar, 2027)
+    check("2027 岁建", sm["岁前"]["岁建"], 7)
+    check("2027 官符", sm["岁前"]["官符"], 11)
 
     if FAIL:
         print("FAILED %d" % len(FAIL))

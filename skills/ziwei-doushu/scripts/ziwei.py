@@ -30,7 +30,15 @@ def main(argv=None):
     p.add_argument("--tz", type=float, help="时区偏移小时，默认取城市值或 8")
     p.add_argument("--gender", default="男", choices=["男", "女"])
     p.add_argument("--year", type=int, help="要看流年的年份")
-    p.add_argument("--late-zi", action="store_true", help="23 点后算次日")
+    p.add_argument("--late-zi", dest="late_zi", action="store_true", default=True,
+                   help="23 点后算次日（默认）")
+    p.add_argument("--no-late-zi", dest="late_zi", action="store_false",
+                   help="23 点后仍算本日")
+    p.add_argument("--no-solar", action="store_true", help="不做真太阳时校正（用记录时刻）")
+    p.add_argument("--dst", choices=["auto", "on", "off"], default="auto",
+                   help="中国夏令时：auto 自动识别 1986-1991，on/off 强制")
+    p.add_argument("--year-boundary", choices=["lunar", "lichun"], default="lunar",
+                   help="年干支分界：农历年（默认）或立春")
     p.add_argument("--month", type=int, help="农历月 1-12，配合 --year 输出流月宫")
     p.add_argument("--json", action="store_true", help="输出 JSON")
     args = p.parse_args(argv)
@@ -65,9 +73,11 @@ def main(argv=None):
         if not args.date:
             p.error("需要 --date 或 --lunar")
         y, m, d = [int(x) for x in args.date.split("-")]
+        dst = None if args.dst == "auto" else (args.dst == "on")
         chart = Z.build(lunar_known=False, year=y, month=m, day=d, hour=hh, minute=mm,
                         gender=args.gender, city=args.city, longitude=lon, latitude=lat,
-                        tz=tz, late_zi=args.late_zi)
+                        tz=tz, late_zi=args.late_zi, solar_correction=not args.no_solar,
+                        dst=dst, year_boundary=args.year_boundary)
         birth = "公历 %04d-%02d-%02d %02d:%02d" % (y, m, d, hh, mm)
 
     if args.json:

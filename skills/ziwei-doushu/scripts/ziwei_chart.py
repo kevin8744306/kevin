@@ -45,13 +45,23 @@ def shichen_index(dt):
 
 def build(lunar_known=False, year=None, month=None, day=None, hour=12, minute=0,
           gender="男", city=None, longitude=None, latitude=None, tz=8.0,
-          late_zi=False, leap_half_month_rule=True):
+          late_zi=True, leap_half_month_rule=True, solar_correction=True,
+          dst=None, year_boundary="lunar"):
     """排一张紫微斗数命盘，返回 dict。"""
+    dst_applied = None
     if not lunar_known:
         std = datetime(year, month, day, hour, minute)
         if longitude is None:
             longitude = 120.0
-        tst, correction = true_solar(std, longitude, tz)
+        if dst is None:
+            dst = C.in_cn_dst(std)
+        if dst:
+            std = std - timedelta(hours=1)
+        dst_applied = dst
+        if solar_correction:
+            tst, correction = true_solar(std, longitude, tz)
+        else:
+            tst, correction = std, 0.0
         d = tst.date()
         hour_eff = tst.hour
         minute_eff = tst.minute
@@ -80,8 +90,16 @@ def build(lunar_known=False, year=None, month=None, day=None, hour=12, minute=0,
     if leap and leap_half_month_rule and lunar_day > 15:
         month_eff = lm + 1 if lm < 12 else 1
 
-    year_gan = C.year_gan_by_lunar_year(lunar_year)
-    year_zhi = C.year_zhi_by_lunar_year(lunar_year)
+    # 年干支分界：农历年（默认，《全书》口径）或立春
+    ganzhi_year = lunar_year
+    if year_boundary == "lichun" and tst is not None:
+        lc = C.lichun_datetime(tst.year, tz)
+        if tst < lc:
+            ganzhi_year = tst.year - 1
+        else:
+            ganzhi_year = tst.year
+    year_gan = C.year_gan_by_lunar_year(ganzhi_year)
+    year_zhi = C.year_zhi_by_lunar_year(ganzhi_year)
     ming, shen = C.ming_shen_gong(month_eff, hour_zhi)
     ming_gan = C.palace_gan(year_gan, ming)
     ju, ju_wuxing = C.wuxing_ju(ming_gan, ming)
@@ -96,6 +114,8 @@ def build(lunar_known=False, year=None, month=None, day=None, hour=12, minute=0,
         "ziwei_index": zi,
         "gender": gender,
         "longitude": longitude, "latitude": latitude, "tz": tz,
+        "dst_applied": dst_applied, "year_boundary": year_boundary,
+        "ganzhi_year": ganzhi_year,
         "solar_correction_min": correction,
         "hour_eff": hour_eff, "minute_eff": minute_eff,
         "late_zi": late_zi,

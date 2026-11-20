@@ -67,9 +67,12 @@ def score(chart, year, event, layer, lunar_month=None, hua=None):
         for m in MARK[event]:
             if m in stars:
                 total += 1.0
+        maps = dict(chart["spirit_map"])
+        if layer in ("流年", "流月"):
+            maps.update(T.year_spirit_map(chart, year))
         for sh in SHEN[event]:
             for grp in ("岁前", "将前", "博士"):
-                if chart["spirit_map"][grp].get(sh) == idx:
+                if maps.get(grp, {}).get(sh) == idx:
                     total += 1.0
         table = hua if hua is not None else chart["hua_of_star"]
         for star, kind in table.items():

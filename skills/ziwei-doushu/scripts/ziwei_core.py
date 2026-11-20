@@ -10,7 +10,7 @@
 
 from datetime import date, datetime, timedelta
 
-MODEL_VERSION = "2026.11.21-r1"
+MODEL_VERSION = "2026.11.21-r8"
 
 GAN = "甲乙丙丁戊己庚辛壬癸"
 ZHI = "子丑寅卯辰巳午未申酉戌亥"
@@ -80,6 +80,71 @@ def lunar_to_solar(ly, lm, ld):
 # 日干支锚点：1900-01-31（农历正月初一）为甲辰日
 DAY_GANZHI_ANCHOR = (date(1900, 1, 31), 40)  # 甲辰 = 第 41 个，索引 40
 
+# 中国夏令时（1986–1991），起止均为当地 02:00
+CN_DST = [
+    ((1986, 5, 4), (1986, 9, 14)),
+    ((1987, 4, 12), (1987, 9, 13)),
+    ((1988, 4, 10), (1988, 9, 11)),
+    ((1989, 4, 16), (1989, 9, 17)),
+    ((1990, 4, 15), (1990, 9, 16)),
+    ((1991, 4, 14), (1991, 9, 15)),
+]
+
+
+def in_cn_dst(dt):
+    """是否落在 1986–1991 年中国夏令时区间内。"""
+    d = dt.date()
+    for (y1, m1, d1), (y2, m2, d2) in CN_DST:
+        if date(y1, m1, d1) <= d <= date(y2, m2, d2):
+            return True
+    return False
+
+
+def _julian_day(dt):
+    """UTC datetime -> 儒略日。"""
+    y, m = dt.year, dt.month
+    if m <= 2:
+        y -= 1
+        m += 12
+    a = y // 100
+    b = 2 - a + a // 4
+    day = dt.day + (dt.hour + dt.minute / 60.0) / 24.0
+    return int(365.25 * (y + 4716)) + int(30.6001 * (m + 1)) + day + b - 1524.5
+
+
+def sun_longitude(dt_utc):
+    """太阳视黄经（度），Meeus 低精度算法，误差约 0.01°。"""
+    import math
+    jd = _julian_day(dt_utc)
+    t = (jd - 2451545.0) / 36525.0
+    l0 = 280.46646 + 36000.76983 * t + 0.0003032 * t * t
+    m = 357.52911 + 35999.05029 * t - 0.0001537 * t * t
+    e = 0.016708634 - 0.000042037 * t - 0.0000001267 * t * t
+    mr = math.radians(m)
+    c = ((1.914602 - 0.004817 * t - 0.000014 * t * t) * math.sin(mr)
+         + (0.019993 - 0.000101 * t) * math.sin(2 * mr)
+         + 0.000289 * math.sin(3 * mr))
+    omega = math.radians(125.04 - 1934.136 * t)
+    return (l0 + c - 0.00569 - 0.00478 * math.sin(omega)) % 360.0
+
+
+def lichun_datetime(year, tz=8.0):
+    """该年立春时刻（当地标准时）。黄经 315°。"""
+    from datetime import datetime, timedelta, timezone
+    # 在 2 月 1–8 日间二分搜索
+    lo = datetime(year, 2, 1, tzinfo=timezone(timedelta(hours=tz)))
+    hi = datetime(year, 2, 8, tzinfo=timezone(timedelta(hours=tz)))
+    for _ in range(40):
+        mid = lo + (hi - lo) / 2
+        lon = sun_longitude(mid.astimezone(timezone.utc).replace(tzinfo=None))
+        # 转成相对 315° 的差值（度）
+        diff = (lon - 315.0 + 180) % 360 - 180
+        if diff < 0:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + (hi - lo) / 2).replace(tzinfo=None)
+
 
 def day_ganzhi(d):
     base, idx = DAY_GANZHI_ANCHOR
@@ -107,9 +172,13 @@ WUHU_DUN = {0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0}  # 年�
 
 
 def palace_gan(year_gan, branch_index):
-    """五虎遁：由年干推某地支宫的天干索引。"""
+    """五虎遁：由年干推某地支宫的天干索引。
+
+    天干以 10 为周期、地支 12，寅宫之前（子丑）要按 12 取模回绕，
+    不能用 branch_index - 2 直接入模 10（2026-11 修，见 logs 记录）。
+    """
     start = WUHU_DUN[year_gan]
-    return (start + (branch_index - 2)) % 10
+    return (start + ((branch_index - 2) % 12)) % 10
 
 
 NAYIN = [
