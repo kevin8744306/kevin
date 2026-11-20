@@ -10,6 +10,8 @@
 
 from datetime import date, datetime, timedelta
 
+MODEL_VERSION = "2026.11.21-r1"
+
 GAN = "甲乙丙丁戊己庚辛壬癸"
 ZHI = "子丑寅卯辰巳午未申酉戌亥"
 SHICHEN = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]

@@ -182,3 +182,40 @@ def xiaoxian_hua(chart, age):
 def liunian_hua(year):
     """流年四化：以流年干起四化（本 skill 默认不用于断，只作对照）。"""
     return C.SIHUA[C.year_gan_by_lunar_year(year)]
+
+
+def daxian_hua(chart, year):
+    """大限四化：以大限宫宫干起四化（参照层，不进评分）。"""
+    age = year - chart["lunar_year"] + 1
+    dx = Z.daxian_for_age(chart, age)
+    if not dx:
+        return None, None
+    return C.SIHUA[C.palace_gan(chart["year_gan"], dx["palace_index"])], dx
+
+
+def hua_reference(chart, year):
+    """四层四化的参照结果：生年、大限、小限、流年。"""
+    age = year - chart["lunar_year"] + 1
+    xh, xx = xiaoxian_hua(chart, age)
+    dh, dx = daxian_hua(chart, year)
+    lh = liunian_hua(year)
+    out = [("生年", chart["sihua"], None)]
+    if dh:
+        out.append(("大限", dh, dx["palace"]))
+    out.append(("小限", xh, chart["palace_of"][xx]))
+    out.append(("流年", lh, "%s年" % (C.GAN[C.year_gan_by_lunar_year(year)] + C.ZHI[Z.liunian_index(year)])))
+    return out
+
+
+def render_hua_reference(chart, year):
+    lines = ["### 四化参照（不进评分）", ""]
+    lines.append("| 层 | 宫/年 | 禄 | 权 | 科 | 忌 |")
+    lines.append("| --- | --- | --- | --- | --- | --- |")
+    for name, hua, where in hua_reference(chart, year):
+        lines.append("| %s | %s | %s | %s | %s | %s |" % (
+            name, where or "本命",
+            hua.get("禄"), hua.get("权"), hua.get("科"), hua.get("忌")))
+    lines.append("")
+    lines.append("> 参照层：只作「往哪个方向动」的旁证，不进强度评分；"
+                 "同一颗星被两层同向化到＝加强，被反向化到＝拉扯。")
+    return "\n".join(lines)

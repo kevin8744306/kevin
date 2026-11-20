@@ -177,6 +177,8 @@ def analyse(chart, target_year=None):
         out.append("")
         out.extend(T.render_layers(chart, target_year).split("\n"))
         out.append("")
+        out.extend(T.render_hua_reference(chart, target_year).split("\n"))
+        out.append("")
         out.append("> 权重：本命 1.0 ＞ 大限 0.6 ＞ 流年 0.35 ＞ 小限 0.15；"
                    "同层内煞、忌加分，吉、禄权科减分。冲突时以大限压流年，本命压大限。")
 
